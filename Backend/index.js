@@ -1,8 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
-const bcrypt = require('bcrypt');
-
 const app = express();
 const PORT = 3001;
 
@@ -27,8 +25,8 @@ db.connect((err) => {
 
 // --- Rutas (Endpoints) ---
 
-// Ruta para el registro de usuarios (TA05)
-app.post('/api/usuarios/registro', async (req, res) => { 
+// Ruta para el registro de usuarios
+app.post('/api/usuarios/registro',(req, res) => { 
   console.log("Datos recibidos:", req.body);
   const { 
     nombre, email, password, fecha_nacimiento, 
@@ -69,7 +67,6 @@ app.post('/api/usuarios/registro', async (req, res) => {
   }
 
   const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
     
   //Query SQL
   const sql = `
@@ -81,7 +78,7 @@ app.post('/api/usuarios/registro', async (req, res) => {
   db.query(sql, [
     nombre, 
     email, 
-    hashedPassword, 
+    password, 
     rol, 
     fecha_nacimiento, 
     celular, 
@@ -103,7 +100,7 @@ app.post('/api/usuarios/registro', async (req, res) => {
 });
 
 // Ruta para crear personal por admin
-app.post('/api/admin/crear-personal', async (req, res) => {
+app.post('/api/admin/crear-personal',(req, res) => {
   console.log("Datos recibidos para crear personal:", req.body);
   
   const { 
@@ -175,6 +172,54 @@ app.post('/api/admin/crear-personal', async (req, res) => {
         
     console.log('Personal registrado con éxito:', result);
     res.status(201).json({ message: `¡${rol} registrado con éxito!` });
+  });
+});
+
+//Ruta para login de usuario
+app.post('/api/usuarios/login', (req, res) => {
+  console.log("Intento de login:", req.body);
+  const { email, password, rol } = req.body;
+
+  //Buscar al usuario por email
+  const sqlFindUser = "SELECT * FROM Usuarios WHERE email = ?";
+    
+  db.query(sqlFindUser, [email], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Error del servidor." });
+    }
+
+    //Verificar si el usuario existe
+    if (results.length === 0) {
+      return res.status(401).json({ message: "Credenciales incorrectas." });
+    }
+
+    const user = results[0]; // El usuario encontrado en la BD
+
+    //Verificar que el rol coincida
+    if (user.rol !== rol) {
+      return res.status(401).json({ message: "Rol incorrecto para este usuario." });
+    }
+
+    //Verificar la contraseña
+    if (password !== user.password) {
+      return res.status(401).json({ message: "Credenciales incorrectas." });
+    }
+
+    //El usuario es válido
+    console.log("Login exitoso:", user.nombre);
+    
+    //Creamos un objeto de usuario para enviar al frontend
+    const usuarioParaFrontend = {
+      id: user.id_usuario,
+      nombre: user.nombre,
+      rol: user.rol
+    };
+                
+    res.status(200).json({ 
+      message: "Login exitoso", 
+      usuario: usuarioParaFrontend 
+    });
   });
 });
 

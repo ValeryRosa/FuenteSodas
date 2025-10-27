@@ -73,9 +73,7 @@ function RegisterForm({ onSuccessfulRegister }) {
       [name]: error
     }));
   };
-
-
-  // 'handleChange'también valida
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
         
@@ -85,14 +83,12 @@ function RegisterForm({ onSuccessfulRegister }) {
       [name]: value
     }));
 
-    //Validar campo que acaba de cambiar
     validateField(name, value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-        
-    // Re-validamos todo
+
     Object.keys(formData).forEach(name => validateField(name, formData[name]));
         
     if (Object.values(errors).some(error => error !== '')) {
@@ -103,7 +99,7 @@ function RegisterForm({ onSuccessfulRegister }) {
     try {
       const response = await axios.post('http://localhost:3001/api/usuarios/registro', formData);
       alert('¡Registro exitoso!');
-            
+
       if (onSuccessfulRegister) {
         onSuccessfulRegister();
       }
