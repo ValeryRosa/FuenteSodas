@@ -1,8 +1,7 @@
 import React from "react";
-import LoginForm from "./LoginForm.jsx";
 import "./RegisterModal.css";
 
-function LoginModal({ isOpen, onClose, loginType, onLoginSuccess }) {
+function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
 
   return (
@@ -11,9 +10,10 @@ function LoginModal({ isOpen, onClose, loginType, onLoginSuccess }) {
         <button className="modal-close-button" onClick={onClose}>
           &times;
         </button>
-        <LoginForm loginType={loginType} onLoginSuccess={onLoginSuccess} />
+        <h2>{title}</h2>
+        {children}
       </div>
     </div>
   );
 }
-export default LoginModal;
+export default Modal;

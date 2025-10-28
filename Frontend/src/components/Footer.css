@@ -45,8 +45,8 @@
 }
 
 .personal-link {
-  color: #e63946; /* Rojo */
-  background-color: white; /* Fondo blanco para el link */
+  color: #e63946;
+  background-color: white;
   padding: 0.3rem 0.8rem;
   border-radius: 5px;
   text-decoration: none;
