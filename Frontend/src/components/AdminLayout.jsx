@@ -4,60 +4,61 @@ import CrearPersonalForm from "./Crearpersonal.jsx";
 import GestionCategorias from "./GestionCategorias.jsx";
 import GestionProductos from "./GestionProductos.jsx";
 
-function AdminLayout({ currentUser }) {
-  console.log("currentUser DENTRO de AdminLayout:", currentUser);
+function AdminLayout({ currentUser, onLogout }) {
+  //Por defecto mostrar'productos'.
   const [activeView, setActiveView] = useState("productos");
-  console.log("AdminLayout renderizando, activeView es:", activeView);
 
-  const handleMenuClick = (viewName) => {
-    console.log(`Intentando cambiar a la vista: ${viewName}`);
+  const handleViewChange = (viewName) => {
     setActiveView(viewName);
   };
 
   return (
     <div className="admin-layout">
+      {/*BARRA LATERAL IZQUIERDA*/}
       <aside className="admin-sidebar">
         <h3>Panel Admin</h3>
         <ul className="admin-menu">
           <li>
-            <a
-              href="#productos"
+            <span
               className={activeView === "productos" ? "active" : ""}
-              onClick={() => setActiveView("productos")}
+              onClick={() => handleViewChange("productos")}
             >
               Productos
-            </a>
+            </span>
           </li>
           <li>
-            <a
-              href="#categorias"
+            <span
               className={activeView === "categorias" ? "active" : ""}
-              onClick={() => setActiveView("categorias")}
+              onClick={() => handleViewChange("categorias")}
             >
               Categorías
-            </a>
+            </span>
           </li>
           <li>
-            <a
-              href="#personal"
+            <span
               className={activeView === "personal" ? "active" : ""}
-              onClick={() => setActiveView("personal")}
+              onClick={() => handleViewChange("personal")}
             >
               Personal
-            </a>
+            </span>
           </li>
           <li>
-            <a
-              href="#clientes"
+            <span
               className={activeView === "clientes" ? "active" : ""}
-              onClick={() => setActiveView("clientes")}
+              onClick={() => handleViewChange("clientes")}
             >
               Clientes
-            </a>
+            </span>
+          </li>
+          <li>
+            <span onClick={onLogout} style={{ cursor: "pointer" }}>
+              Cerrar Sesión
+            </span>
           </li>
         </ul>
       </aside>
 
+      {/*CONTENIDO PRINCIPAL (DERECHA)*/}
       <main className="admin-content">
         {activeView === "productos" && (
           <GestionProductos currentUser={currentUser} />
@@ -67,11 +68,7 @@ function AdminLayout({ currentUser }) {
           <GestionCategorias currentUser={currentUser} />
         )}
 
-        {activeView === "personal" && (
-          <>
-            <CrearPersonalForm />
-          </>
-        )}
+        {activeView === "personal" && <CrearPersonalForm />}
 
         {activeView === "clientes" && (
           <div>
@@ -80,6 +77,12 @@ function AdminLayout({ currentUser }) {
               Aquí irá una tabla o lista de todos los usuarios con rol
               'cliente'.
             </p>
+          </div>
+        )}
+
+        {(!activeView || activeView === "") && (
+          <div>
+            <h2>Seleccione una opción del menú.</h2>
           </div>
         )}
       </main>

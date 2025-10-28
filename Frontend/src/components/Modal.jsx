@@ -2,6 +2,7 @@ import React from "react";
 import "./RegisterModal.css";
 
 function Modal({ isOpen, onClose, title, children }) {
+  console.log("Intentando renderizar Modal. isOpen:", isOpen);
   if (!isOpen) return null;
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./AdminGestion.css";
-import { FaPencilAlt, FaTrash } from "react-icons/fa";
+import { FaPencilAlt, FaTrash, FaPlus } from "react-icons/fa";
 import Modal from "./Modal.jsx";
 import ProductoForm from "./ProductoForm.jsx";
 
@@ -29,21 +29,61 @@ function GestionProductos({ currentUser }) {
 
   //Crear
   const handleNuevoProducto = () => {
+    console.log("Clic en Nuevo Producto");
     setProductoEditando(null);
     setIsModalOpen(true);
   };
 
   //Actualizar
   const handleEditarProducto = (producto) => {
+    console.log("Clic en Editar Producto:", producto);
     setProductoEditando(producto);
     setIsModalOpen(true);
   };
 
+  const handleCerrarModal = (productoGuardado) => {
+    setIsModalOpen(false);
+    setProductoEditando(null);
+
+    if (productoGuardado) {
+      setProductos((prevProductos) => {
+        const existingIndex = prevProductos.findIndex(
+          (p) => p.id_producto === productoGuardado.id_producto
+        );
+        if (existingIndex !== -1) {
+          const newProducts = [...prevProductos];
+          newProducts[existingIndex] = productoGuardado;
+          return newProducts;
+        } else {
+          return [productoGuardado, ...prevProductos];
+        }
+      });
+    }
+  };
+
   //Eliminar
   const handleBorrarProducto = (idProducto) => {
-    if (window.confirm("¿Seguro que quieres borrar este producto?")) {
-      console.log("Borrando producto ID:", idProducto);
-      alert("Funcionalidad de borrar pendiente.");
+    if (
+      window.confirm(
+        "¿Estás seguro de que quieres borrar este producto? ¡Esta acción es irreversible!"
+      )
+    ) {
+      axios
+        .delete(`http://localhost:3001/api/admin/productos/${idProducto}`)
+        .then((response) => {
+          setProductos((prev) =>
+            prev.filter((p) => p.id_producto !== idProducto)
+          );
+          alert("Producto eliminado exitosamente.");
+        })
+        .catch((err) => {
+          console.error("Error al borrar producto:", err);
+          alert(
+            `Error al borrar: ${
+              err.response?.data?.message || "Error del servidor"
+            }`
+          );
+        });
     }
   };
 
@@ -67,11 +107,10 @@ function GestionProductos({ currentUser }) {
       {/* Encabezado*/}
       <div className="gestion-header">
         <h2>Gestión de Productos</h2>
-        <button onClick={handleNuevoProducto} className="btn-nueva">
-          + Nuevo Producto
+        <button className="btn-nueva" onClick={handleNuevoProducto}>
+          <FaPlus /> Nuevo
         </button>
       </div>
-
       {/* Tabla de Productos*/}
       <table className="gestion-tabla">
         <thead>
@@ -109,8 +148,24 @@ function GestionProductos({ currentUser }) {
                   "N/A"
                 )}
               </td>
-              {/* --------------------------- */}
-              <td>{/* ... (botones de editar/eliminar) ... */}</td>
+              <td>
+                {/* Botón de Edición*/}
+                <button
+                  className="btn-accion editar"
+                  onClick={() => handleEditarProducto(producto)}
+                  title="Editar"
+                >
+                  <FaPencilAlt />
+                </button>
+                {/* Botón de Eliminación*/}
+                <button
+                  className="btn-accion eliminar"
+                  onClick={() => handleBorrarProducto(producto.id_producto)}
+                  title="Eliminar"
+                >
+                  <FaTrash />
+                </button>
+              </td>
             </tr>
           ))}
           {productos.length === 0 && (
@@ -123,21 +178,20 @@ function GestionProductos({ currentUser }) {
         </tbody>
       </table>
 
-      {/*Modal con el Formulario*/}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setProductoEditando(null);
-        }}
-        title={productoEditando ? "Editar Producto" : "Nuevo Producto"}
-      >
-        <ProductoForm
-          adminId={currentUser?.id}
-          productoParaEditar={productoEditando}
-          onProductoGuardado={handleProductoGuardado}
-        />
-      </Modal>
+      {isModalOpen && (
+        <Modal
+          isOpen={isModalOpen}
+          // --------------------------
+          onClose={() => setIsModalOpen(false)}
+          title={productoEditando ? "Editar Producto" : "Registrar Producto"}
+        >
+          {" "}
+          <ProductoForm
+            onProductoGuardado={handleCerrarModal}
+            productoParaEditar={productoEditando}
+          />{" "}
+        </Modal>
+      )}
     </div>
   );
 }

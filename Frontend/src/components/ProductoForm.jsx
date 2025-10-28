@@ -89,8 +89,59 @@ function ProductoForm({ adminId, onProductoGuardado, productoParaEditar }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    console.log("Enviando datos del producto:", formData);
-    alert("Guardando producto (simulación)...");
+
+    // Validación simple
+    if (
+      !formData.nombre ||
+      !formData.precio ||
+      !formData.stock ||
+      !formData.id_categoria
+    ) {
+      setError("Por favor, complete todos los campos obligatorios.");
+      return;
+    }
+
+    // Crear el objeto FormData
+    const data = new FormData();
+    data.append("nombre", formData.nombre);
+    data.append("descripcion", formData.descripcion);
+    data.append("precio", formData.precio);
+    data.append("stock", formData.stock);
+    data.append("id_categoria", formData.id_categoria);
+
+    if (formData.imagen) {
+      data.append("imagen", formData.imagen);
+    }
+
+    if (isEditing && !formData.imagen) {
+      data.append("imagen_url_existente", productoParaEditar.imagen_url);
+    }
+
+    const url = isEditing
+      ? `http://localhost:3001/api/admin/productos/${productoParaEditar.id_producto}`
+      : "http://localhost:3001/api/admin/productos";
+    const method = isEditing ? "put" : "post";
+
+    axios({
+      method: method,
+      url: url,
+      data: data,
+    })
+      .then((response) => {
+        onProductoGuardado(response.data);
+        alert(
+          `Producto ${isEditing ? "actualizado" : "registrado"} con éxito!`
+        );
+      })
+      .catch((err) => {
+        console.error(
+          "Error al guardar producto:",
+          err.response?.data?.message
+        );
+        setError(
+          err.response?.data?.message || "Error al guardar el producto."
+        );
+      });
   };
 
   return (

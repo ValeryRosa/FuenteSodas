@@ -67,7 +67,7 @@ function App() {
           <div>
             <h1>¡Bienvenido, {currentUser.nombre}!</h1>
             {currentUser.rol === "administrador" && (
-                <AdminLayout currentUser={currentUser} />
+              <AdminLayout currentUser={currentUser} onLogout={handleLogout} />
             )}
             {currentUser.rol === "operador" && <h2>Soy Operador de Pedidos</h2>}
           </div>

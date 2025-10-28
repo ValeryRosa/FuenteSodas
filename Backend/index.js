@@ -1,6 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const app = express();
 const PORT = 3001;
 
@@ -22,6 +25,74 @@ db.connect((err) => {
   }
   console.log("Conectado exitosamente a la base de datos MySQL.");
 });
+
+// Variable global para almacenar el mapeo ID -> Nombre
+let categoriaMap = {};
+
+// Función para cargar los nombres de las categorías y guardarlos en el mapa
+const cargarNombresCategorias = () => {
+  const sql = "SELECT id_categoria, nombre FROM Categorias";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error al cargar mapeo de categorías:", err);
+      return;
+    }
+    // Crea el mapa: { '1': 'Platos', '2': 'Postres', ... }
+    categoriaMap = results.reduce((map, cat) => {
+      map[cat.id_categoria] = cat.nombre.toLowerCase().replace(/ /g, "-");
+      return map;
+    }, {});
+    console.log("Mapeo de categorías cargado:", categoriaMap);
+  });
+};
+
+// Llama a la función al iniciar la aplicación
+db.connect((err) => {
+  if (err) {
+    console.error("Error al conectar a la base de datos:", err);
+    return;
+  }
+  console.log("Conectado exitosamente a la base de datos MySQL.");
+  cargarNombresCategorias(); // <-- ¡Cargamos los nombres aquí!
+});
+
+const uploadDirBase = path.join(__dirname, "..", "Frontend", "public", "img");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const idCategoria = req.body.id_categoria; // Obtenemos el ID del formulario
+
+    // 1. Usamos el mapa para encontrar el nombre de la carpeta
+    const nombreCarpeta = categoriaMap[idCategoria];
+
+    if (!nombreCarpeta) {
+      // Si el nombre no existe (o el mapa está vacío), lo enviamos a una carpeta 'otros'
+      return cb(
+        new Error("Categoría de destino no encontrada en el mapa."),
+        false
+      );
+    }
+
+    // 2. Construimos la ruta final: /public/img/platos/
+    const destinoFinal = path.join(uploadDirBase, nombreCarpeta);
+
+    // 3. Verificamos que el directorio exista (Multer no lo hace recursivamente)
+    // Aunque no estamos usando async/await, usamos la versión síncrona de mkdir para la seguridad de Multer
+    if (!fs.existsSync(destinoFinal)) {
+      fs.mkdirSync(destinoFinal, { recursive: true });
+    }
+
+    cb(null, destinoFinal);
+  },
+  filename: (req, file, cb) => {
+    cb(
+      null,
+      Date.now() + "-" + file.originalname.toLowerCase().replace(/ /g, "-")
+    );
+  },
+});
+
+const upload = multer({ storage: storage });
 
 // --- Rutas (Endpoints) ---
 
@@ -284,6 +355,7 @@ app.get("/api/productos", (req, res) => {
             c.nombre AS categoria_nombre
         FROM Productos p
         JOIN Categorias c ON p.id_categoria = c.id_categoria
+        WHERE p.stock > 0
     `;
 
   db.query(sql, (err, results) => {
@@ -446,7 +518,7 @@ app.put("/api/admin/categorias/:id", (req, res) => {
   );
 });
 
-// Ruta para obtener productos (Admin) ---
+// Ruta para obtener productos (Admin)
 app.get("/api/admin/productos", (req, res) => {
   // Obtenemos todos los datos del producto y el nombre de su categoría
   const sql = `
@@ -464,6 +536,195 @@ app.get("/api/admin/productos", (req, res) => {
       return res.status(500).json({ message: "Error interno del servidor." });
     }
     res.status(200).json(results);
+  });
+});
+
+// Ruta para crear un nuevo producto (Admin)
+app.post("/api/admin/productos", upload.single("imagen"), (req, res) => {
+  const idCategoria = req.body.id_categoria;
+  const nombreCarpeta = categoriaMap[idCategoria];
+  const imagen_url = req.file
+    ? `/img/${nombreCarpeta}/${req.file.filename}`
+    : null;
+
+  const { nombre, descripcion, precio, stock, id_categoria } = req.body;
+
+  if (!nombre || !precio || !stock || !id_categoria) {
+    if (req.file) {
+      fs.unlink(req.file.path);
+    }
+    return res.status(400).json({
+      message: "Faltan campos obligatorios: nombre, precio, stock, categoría.",
+    });
+  }
+
+  const sql = `
+        INSERT INTO Productos 
+        (nombre, descripcion, precio, stock, id_categoria, imagen_url) 
+        VALUES (?, ?, ?, ?, ?, ?)
+    `;
+
+  db.query(
+    sql,
+    [nombre, descripcion, precio, stock, id_categoria, imagen_url],
+    (err, result) => {
+      if (err) {
+        console.error("Error al crear producto:", err);
+        if (req.file) {
+          fs.unlink(req.file.path);
+        }
+        return res
+          .status(500)
+          .json({ message: "Error interno al guardar producto." });
+      }
+
+      const newProductId = result.insertId;
+      const sqlSelect = `
+            SELECT p.*, c.nombre AS nombre_categoria
+            FROM Productos p
+            JOIN Categorias c ON p.id_categoria = c.id_categoria
+            WHERE p.id_producto = ?
+        `;
+      db.query(sqlSelect, [newProductId], (err, rows) => {
+        if (err)
+          return res
+            .status(500)
+            .json({ message: "Producto creado, pero error al recuperarlo." });
+        res.status(201).json(rows[0]);
+      });
+    }
+  );
+});
+
+// Ruta para actualizar producto (Admin)
+app.put("/api/admin/productos/:id", upload.single("imagen"), (req, res) => {
+  const productId = req.params.id;
+  const {
+    nombre,
+    descripcion,
+    precio,
+    stock,
+    id_categoria,
+    imagen_url_existente,
+  } = req.body;
+
+  const idCategoria = req.body.id_categoria;
+  const nombreCarpeta = categoriaMap[idCategoria];
+
+  let nueva_imagen_url = imagen_url_existente;
+  if (req.file) {
+    nueva_imagen_url = `/img/${nombreCarpeta}/${req.file.filename}`;
+  }
+
+  if (!nombre || !precio || !stock || !id_categoria) {
+    if (req.file) {
+      fs.unlink(req.file.path, (err) => {
+        if (err)
+          console.error(
+            "Error al borrar archivo después de fallo de validación:",
+            err
+          );
+      });
+    }
+    return res.status(400).json({ message: "Faltan campos obligatorios." });
+  }
+
+  const final_imagen_url = nueva_imagen_url || imagen_url_existente;
+
+  const sql = `
+        UPDATE Productos
+        SET nombre=?, descripcion=?, precio=?, stock=?, id_categoria=?, imagen_url=?
+        WHERE id_producto=?
+    `;
+
+  db.query(
+    sql,
+    [
+      nombre,
+      descripcion,
+      precio,
+      stock,
+      id_categoria,
+      nueva_imagen_url,
+      productId,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Error al actualizar producto:", err);
+        if (req.file) {
+          fs.unlink(req.file.path, (err) => {
+            if (err)
+              console.error(
+                "Error al borrar archivo después de fallo SQL:",
+                err
+              );
+          });
+        }
+        return res
+          .status(500)
+          .json({ message: "Error interno al actualizar." });
+      }
+
+      const sqlSelect = `
+            SELECT p.*, c.nombre AS nombre_categoria
+            FROM Productos p
+            JOIN Categorias c ON p.id_categoria = c.id_categoria
+            WHERE p.id_producto = ?
+        `;
+      db.query(sqlSelect, [productId], (err, rows) => {
+        if (err)
+          return res
+            .status(500)
+            .json({ message: "Producto actualizado, error al recuperarlo." });
+        res.status(200).json(rows[0]);
+      });
+    }
+  );
+});
+
+// Ruta para eliminar producto (Admin)
+app.delete("/api/admin/productos/:id", (req, res) => {
+  const productId = req.params.id;
+
+  // 1. Buscamos la URL de la imagen
+  const sqlFindImage = "SELECT imagen_url FROM Productos WHERE id_producto = ?";
+
+  db.query(sqlFindImage, [productId], (err, results) => {
+    if (err)
+      return res
+        .status(500)
+        .json({ message: "Error al buscar URL de imagen." });
+
+    const imagen_url = results[0]?.imagen_url;
+
+    // 2. Borrar el producto de la BD
+    const sqlDelete = "DELETE FROM Productos WHERE id_producto = ?";
+    db.query(sqlDelete, [productId], (err, result) => {
+      if (err) {
+        console.error("Error al borrar producto:", err);
+        return res
+          .status(500)
+          .json({ message: "Error interno al borrar producto." });
+      }
+
+      // 3. Borramos el archivo del disco (si existe y la BD fue exitosa)
+      if (result.affectedRows > 0 && imagen_url) {
+        const filePath = path.join(
+          __dirname,
+          "..",
+          "Frontend",
+          "public",
+          imagen_url
+        );
+        fs.unlink(filePath, (unlinkErr) => {
+          // Usamos fs.unlink (callback)
+          if (unlinkErr)
+            console.error("Error al borrar archivo del disco:", unlinkErr);
+        });
+      }
+
+      res.status(200).json({ message: "Producto eliminado exitosamente." });
+    });
   });
 });
 
