@@ -1594,7 +1594,7 @@ app.post('/api/pagos/confirmar-pago', async (req, res) => {
 
 //integración con Stripe
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe("process.env.STRIPE_SECRET_KEY");
 
 app.post('/api/pagos/create-payment-intent', async (req, res) => {
   try {
