@@ -1,5 +1,5 @@
 import sgMail from '@sendgrid/mail';
-sgMail.setApiKey(process.env.SENDGRID_API_KEY); //Cambiar por tu api key de SendGrid
+sgMail.setApiKey("process.env.SENDGRID_API_KEY"); //Cambiar por tu api key de SendGrid
 
 export async function sendPaymentConfirmation(userEmail, paymentItems) {
   
