@@ -1,0 +1,81 @@
+.admin-layout {
+  display: flex;
+  min-height: 90vh;
+}
+
+.admin-sidebar {
+  width: 200px;
+  background-color: var(--color-dark-red, #5c000c); /* Color pertinente */
+  color: white;
+  padding: 1.5rem 0;
+}
+
+.admin-sidebar h3 {
+  text-align: center;
+  font-size: 0.8rem;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+.admin-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-menu li a {
+  display: block;
+  color: white;
+  text-decoration: none;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.admin-menu li a:hover {
+  background-color: var(--color-medium-red, #841a44);
+}
+
+.admin-menu li a.active {
+  background-color: #e63946;
+  font-weight: bold;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+  background-color: #f4f7f6;
+}
+
+.admin-menu li a,
+.admin-menu li span {
+  display: block;
+  color: white;
+  text-decoration: none;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.admin-menu li span:hover {
+  background-color: var(--color-medium-red, #841a44);
+}
+
+.admin-menu li span.active {
+  background-color: #e63946;
+  font-weight: bold;
+}
+.notification-badge {
+  display: inline-block;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  width: 15px;
+  height: 15px;
+  text-align: center;
+  font-size: 10px;
+  line-height: 15px;
+  margin-left: 5px;
+  font-weight: bold;
+}
