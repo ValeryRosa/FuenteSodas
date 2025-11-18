@@ -1,0 +1,240 @@
+.historial-pedidos-cliente {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f8f8;
+    border-radius: 12px;
+}
+
+.historial-header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+}
+
+.historial-header h1 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.historial-header p {
+    color: #777;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.divider {
+    height: 3px;
+    background-color: #ff9800;
+    width: 80%;
+    margin: 10px auto 0;
+    border-radius: 5px;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    transition: color 0.2s;
+}
+
+.btn-back:hover {
+    color: #ff9800;
+}
+
+.pedidos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.pedido-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    transition: box-shadow 0.3s ease;
+}
+
+.pedido-card:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.pedido-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.pedido-id {
+    font-weight: 600;
+    color: #555;
+    font-size: 1.1rem;
+}
+
+.pedido-status {
+    padding: 5px 10px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    color: #fff;
+}
+
+.delivered {
+    background-color: #4CAF50; /* entregado */
+}
+
+.cancelled {
+    background-color: #F44336; /* ancelado */
+}
+
+.in-progress {
+    background-color: #2196F3; /* en progreso */
+}
+
+.pending {
+    background-color: #FFC107; /* pendiente */
+}
+
+.pedido-body p {
+    margin: 5px 0;
+    font-size: 0.95rem;
+    color: #444;
+}
+
+.pedido-body strong {
+    font-weight: 600;
+    color: #333;
+}
+
+.pedido-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed #eee;
+}
+
+.pedido-total {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ff9800;
+}
+
+.btn-details {
+    background-color: #d32f2f;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    display: flex;
+    align-items: center;
+}
+
+.btn-details:hover {
+    background-color: #c02828;
+}
+
+.btn-details:active {
+    transform: scale(0.98);
+}
+
+.detalle-expandido {
+    margin-top: 15px;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+}
+
+.detalle-expandido h4 {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed #f0f0f0;
+    padding-bottom: 5px;
+}
+
+.lista-productos-detalle {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.producto-item-detalle {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 0.9rem;
+    color: #666;
+    border-bottom: 1px dotted #f0f0f0;
+}
+
+.producto-item-detalle:last-child {
+    border-bottom: none;
+}
+
+.producto-nombre {
+    font-weight: 500;
+    color: #333;
+}
+
+.historial-loading,
+.historial-error,
+.no-pedidos {
+    text-align: center;
+    padding: 20px;
+    font-size: 1rem;
+    color: #777;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.historial-error {
+    color: #d32f2f;
+    font-weight: bold;
+    border: 1px solid #d32f2f;
+}
+
+@media (max-width: 600px) {
+    .historial-pedidos-cliente {
+        margin: 10px;
+        padding: 10px;
+    }
+    .historial-header h1 {
+        font-size: 1.5rem;
+    }
+    .pedido-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .pedido-status {
+        margin-bottom: 5px;
+    }
+    .pedido-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .btn-details {
+        width: 100%;
+        justify-content: center;
+    }
+}
